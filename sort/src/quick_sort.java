@@ -26,7 +26,7 @@ public class quick_sort {
             }
             while (left < right && n[left] <= pivot) left++; //找到比基准数大的数，碰到小于基准数的继续往后找
             if (left < right)
-                n[right--] = n[left];
+                n[right--] = n[left];//把大的值换到右边来
             n[left] = pivot;
         }
         return left;
