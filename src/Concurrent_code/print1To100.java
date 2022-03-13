@@ -10,6 +10,7 @@
  */
 package Concurrent_code;
 
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class print1To100 {
@@ -47,6 +48,7 @@ class print_class implements Runnable{
                 try {
                     print1To100.s.notifyAll();
                     print1To100.s.wait();
+                    System.out.println(Thread.currentThread().getName() + "从wait方法退出了");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -56,23 +58,32 @@ class print_class implements Runnable{
 }
 
 
+
+//使用ReentrantLock
 class LockTest{
-    final static ReentrantLock lock = new ReentrantLock();
+    static ReentrantLock lock = new ReentrantLock();
+    static Condition con = lock.newCondition();
+    static int count = 1;
 
     static class PC implements Runnable{
         @Override
         public void run() {
-            lock.lock();
+            lock.lock(); //若有线程已经获取该对象的锁，那么后面的线程就会进入lock的同步队列；
             try {
-                while (print1To100.count <= 100){ //小于100就打印
-                    System.out.println(Thread.currentThread().getName() + " " + print1To100.count);
-                    print1To100.count++;
-
-
+                while (LockTest.count <= 100){ //小于100就打印
+//                    if (LockTest.count % 2 ==0){
+                        System.out.println(Thread.currentThread().getName() + " " + LockTest.count);
+//                    }
+                    LockTest.count++;
+                    con.signalAll(); //调用后会唤醒等待队列中的线程移动到同步队列中去；
+                    con.await(); //获得锁的线程调用await后会释放当前获得的锁，并进入到condition的等待队列；直到被其他线程唤醒到同步队列后，有机会去竞争锁，获得lock之后才会从await方法退出；
 //                    lock.notifyAll();
+//                    System.out.println("wake test");
 //                    lock.wait();
                 }
-            }finally {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
                 lock.unlock();
             }
 
@@ -86,6 +97,16 @@ class LockTest{
 
         th1.start();
         th2.start();
+
+        try {
+            Thread.sleep(2000);
+        }catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        LockTest.lock.lock();
+        LockTest.con.signalAll();
+        LockTest.lock.unlock();
 
     }
 
