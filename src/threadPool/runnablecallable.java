@@ -38,6 +38,7 @@ public class runnablecallable {
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+        executor.shutdown();
 
     }
 
